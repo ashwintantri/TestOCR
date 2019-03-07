@@ -6,7 +6,9 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.pm.PackageManager.*
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.Matrix
+import android.graphics.Paint
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.MediaStore
@@ -20,14 +22,19 @@ import com.google.firebase.ml.vision.text.FirebaseVisionTextRecognizer
 import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.activity_main.*
 import java.io.FileNotFoundException
+import android.graphics.Paint.FILTER_BITMAP_FLAG
+import com.google.firebase.database.*
+
 
 class MainActivity : AppCompatActivity() {
     private val UPLOAD_ACTION = 2001
     private val PERMISSION_ACTION = 2002
     private val CAMERA_ACTION = 2003
-    private lateinit var photoImage: Bitmap
-    private lateinit var firebaseImage: FirebaseVisionImage
-    private lateinit var detector:FirebaseVisionTextRecognizer;
+    private lateinit var photoImage:Bitmap
+    private lateinit var firebaseImage:FirebaseVisionImage
+    private lateinit var detector:FirebaseVisionTextRecognizer
+    private lateinit var database:Query
+    private lateinit var valueEventListener: ValueEventListener
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,6 +44,18 @@ class MainActivity : AppCompatActivity() {
         }
         txtCamera.setOnClickListener {
             dispatchTakePictureIntent()
+        }
+        send_button.setOnClickListener {
+            var result = editTotal.text.toString()
+            database = FirebaseDatabase.getInstance().getReference("transactions").orderByChild("license").equalTo(result)
+            val postListener = object : ValueEventListener {
+                override fun onDataChange(dataSnapshot: DataSnapshot) {
+                    Toast.makeText(this@MainActivity,dataSnapshot.toString(),Toast.LENGTH_SHORT).show()
+                }
+                override fun onCancelled(databaseError: DatabaseError) {
+                }
+            }
+            database.addValueEventListener(postListener)
         }
     }
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
